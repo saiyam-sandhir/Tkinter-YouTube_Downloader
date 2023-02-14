@@ -47,24 +47,23 @@ class YouTubeDownloader(ctk.CTk):
         videos_listbox.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 20))
 
         #for video option
-        video_option_label = ctk.CTkLabel(loaded_videos_frame, text="Quality:", font=("Palatino", 20))
-        video_option_label.grid(row=3, column=0, sticky=tk.W)
-        quality_options = ctk.CTkOptionMenu(loaded_videos_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
-        quality_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
-        quality_options.set("Choose Quality")
+        self.video_option_label = ctk.CTkLabel(loaded_videos_frame, text="Quality:", font=("Palatino", 20))
+        self.video_option_label.grid(row=3, column=0, sticky=tk.W)
+        self.quality_options = ctk.CTkOptionMenu(loaded_videos_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
+        self.quality_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
+        self.quality_options.set("Choose Quality")
 
         #for subtitle option
-        subtitle_option_label = ctk.CTkLabel(loaded_videos_frame, text="Language:", font=("Palatino", 20))
-        subtitle_option_label.grid(row=3, column=0, sticky=tk.W)
-        language_options = ctk.CTkOptionMenu(loaded_videos_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
-        language_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
-        language_options.set("Select Language")
-        subtitle_option_label.grid_forget()
-        language_options.grid_forget()
-        
+        self.subtitle_option_label = ctk.CTkLabel(loaded_videos_frame, text="Language:", font=("Palatino", 20))
+        self.subtitle_option_label.grid(row=3, column=0, sticky=tk.W)
+        self.language_options = ctk.CTkOptionMenu(loaded_videos_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
+        self.language_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
+        self.language_options.set("Select Language")
+        self.subtitle_option_label.grid_forget()
+        self.language_options.grid_forget()
 
         #----------Download----------#
-        data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio", "Subtitle"], fg_color="#343638", hover=False, corner_radius=10)
+        data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio", "Subtitle"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
         data_type_options.grid(row=3, column=1, sticky = tk.NS, pady=10)
         data_type_options.set("Video")
 
@@ -75,8 +74,28 @@ class YouTubeDownloader(ctk.CTk):
         #----------Progress Bar----------#
         download_progress_bar = ctk.CTkProgressBar(self, corner_radius=10)
         download_progress_bar.grid(row=4, column=0, sticky=tk.NSEW, padx=(0, 20))
+        download_progress_bar.grid_forget()
 
         self.mainloop()
-        
+
+    def change_datatype(self, datatype):
+        if datatype == "Video":
+            self.video_option_label.grid(row=3, column=0, sticky=tk.W)
+            self.quality_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
+            self.subtitle_option_label.grid_forget()
+            self.language_options.grid_forget()
+
+        elif datatype == "Audio":
+            self.video_option_label.grid_forget()
+            self.quality_options.grid_forget()
+            self.subtitle_option_label.grid_forget()
+            self.language_options.grid_forget()
+
+        else:
+            self.subtitle_option_label.grid(row=3, column=0, sticky=tk.W)
+            self.language_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
+            self.video_option_label.grid_forget()
+            self.quality_options.grid_forget()
+
 if __name__ == "__main__":
     YouTubeDownloader()
