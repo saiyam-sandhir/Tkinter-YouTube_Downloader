@@ -1,6 +1,9 @@
 import customtkinter as ctk
 import tkinter as tk
 from PIL import Image
+import pytube
+import requests
+from io import BytesIO
 
 class YouTubeDownloader(ctk.CTk):
     def __init__(self):
@@ -23,20 +26,26 @@ class YouTubeDownloader(ctk.CTk):
         url_entry.pack(side = tk.LEFT, fill=tk.BOTH, expand=True)
 
         load_button_img = ctk.CTkImage(light_image=Image.open(".\\images\\load.png"), dark_image=Image.open(".\\images\\load.png"), size=(40, 40))
-        load_button = ctk.CTkButton(load_video_frame, text="", image=load_button_img, anchor=tk.CENTER, width=40, corner_radius=10, bg_color = "#242424", fg_color="#242424", hover_color="#EAEAEA")
+        load_button = ctk.CTkButton(load_video_frame, text="", image=load_button_img, anchor=tk.CENTER, width=40, corner_radius=10, bg_color = "#242424", fg_color="#242424", hover_color="#EAEAEA", command=lambda: [self.load_youtube(url_entry.get())])
         load_button.pack(side=tk.RIGHT)
+
+        self.file_not_found_error_label = ctk.CTkLabel(self, text="Error: 404, YouTube video/playlist not found", text_color="red")
 
         #----------Thumbnail----------#
         thumbnail_viewer = ctk.CTkTabview(self, width=400, height=225, corner_radius=10)
-        thumbnail_viewer.grid(row=2, column=1)
+        thumbnail_viewer.grid(row=3, column=1)
         thumbnail_viewer.grid_rowconfigure(0, weight=1)
         thumbnail_viewer.grid_columnconfigure(0, weight=1)
 
         thumbnail_viewer.add("Thumbnail")
 
+        thumbnail_image = ctk.CTkImage(light_image=Image.open(".\\images\\thumbnail.png"), dark_image=Image.open(".\\images\\thumbnail.png"), size=(100, 100))
+        self.thumbnail_img = ctk.CTkButton(thumbnail_viewer.tab("Thumbnail"), text="", image=thumbnail_image, bg_color="#2B2B2B", fg_color="#2B2B2B", hover=False)
+        self.thumbnail_img.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
         #----------Loaded Video(s)----------#
         loaded_videos_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
-        loaded_videos_frame.grid(row=2, column=0, sticky=tk.NSEW, pady = (25,0), padx=(0, 20))
+        loaded_videos_frame.grid(row=3, column=0, sticky=tk.NSEW, pady = (25,0), padx=(0, 20))
 
         ctk.CTkLabel(loaded_videos_frame, text="Video(s):", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
         
@@ -55,30 +64,40 @@ class YouTubeDownloader(ctk.CTk):
 
         #for subtitle option
         self.subtitle_option_label = ctk.CTkLabel(loaded_videos_frame, text="Language:", font=("Palatino", 20))
-        self.subtitle_option_label.grid(row=3, column=0, sticky=tk.W)
         self.language_options = ctk.CTkOptionMenu(loaded_videos_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
-        self.language_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
         self.language_options.set("Select Language")
-        self.subtitle_option_label.grid_forget()
-        self.language_options.grid_forget()
 
         #----------Download----------#
         data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio", "Subtitle"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
-        data_type_options.grid(row=3, column=1, sticky = tk.NS, pady=10)
+        data_type_options.grid(row=4, column=1, sticky = tk.NS, pady=10)
         data_type_options.set("Video")
 
         download_button_img = ctk.CTkImage(light_image=Image.open(".\\images\\download.png"), dark_image=Image.open(".\\images\\download.png"), size=(20, 20))
         download_button = ctk.CTkButton(self, text="Download", image=download_button_img, fg_color="green", hover_color="#3C6255", anchor=tk.CENTER, corner_radius=10)
-        download_button.grid(row=4, column=1, sticky=tk.NS)
+        download_button.grid(row=5, column=1, sticky=tk.NS)
 
         #----------Progress Bar----------#
         download_progress_bar = ctk.CTkProgressBar(self, corner_radius=10)
-        download_progress_bar.grid(row=4, column=0, sticky=tk.NSEW, padx=(0, 20))
-        download_progress_bar.grid_forget()
+        #download_progress_bar.grid(row=6, column=0, sticky=tk.NSEW, padx=(0, 20))
+        #download_progress_bar.grid_forget()
 
         self.mainloop()
 
-    def change_datatype(self, datatype):
+    def load_youtube(self, link: str):
+        try:
+            self.yt = pytube.YouTube(link)
+            self.file_not_found_error_label.grid_forget()
+
+            response = requests.get(self.yt.thumbnail_url)
+            thumbnail_data = response.content
+            thumbnail_img = ctk.CTkImage(light_image=Image.open(BytesIO(thumbnail_data)), dark_image=Image.open(BytesIO(thumbnail_data)), size=(320, 180))
+            self.thumbnail_img.configure(image=thumbnail_img)
+
+
+        except pytube.exceptions.RegexMatchError:
+            self.file_not_found_error_label.grid(row=2, column=0, sticky=tk.W)
+
+    def change_datatype(self, datatype: str):
         if datatype == "Video":
             self.video_option_label.grid(row=3, column=0, sticky=tk.W)
             self.quality_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
