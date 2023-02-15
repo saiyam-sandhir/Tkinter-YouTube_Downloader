@@ -4,6 +4,7 @@ from PIL import Image
 import pytube
 import requests
 from io import BytesIO
+import os
 
 class YouTubeDownloader(ctk.CTk):
     def __init__(self):
@@ -73,12 +74,12 @@ class YouTubeDownloader(ctk.CTk):
         self.language_options.set("Select Language")
 
         #----------Download----------#
-        data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio", "Subtitle"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
-        data_type_options.grid(row=4, column=1, sticky = tk.NS, pady=10)
-        data_type_options.set("Video")
+        self.data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio", "Subtitle"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
+        self.data_type_options.grid(row=4, column=1, sticky = tk.NS, pady=10)
+        self.data_type_options.set("Video")
 
         download_button_img = ctk.CTkImage(light_image=Image.open(".\\images\\download.png"), dark_image=Image.open(".\\images\\download.png"), size=(20, 20))
-        download_button = ctk.CTkButton(self, text="Download", image=download_button_img, fg_color="green", hover_color="#3C6255", anchor=tk.CENTER, corner_radius=10)
+        download_button = ctk.CTkButton(self, text="Download", image=download_button_img, fg_color="green", hover_color="#3C6255", anchor=tk.CENTER, corner_radius=10, command=lambda: [self.download(url_entry.get())])
         download_button.grid(row=5, column=1, sticky=tk.NS)
 
         #----------Progress Bar----------#
@@ -89,6 +90,7 @@ class YouTubeDownloader(ctk.CTk):
     def load_youtube(self, link: str):
         try:
             if not "playlist" in link:
+                self.select_all_videos_checkbox.deselect()
                 self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
@@ -101,6 +103,14 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
                 self.videos_listbox.insert(0, self.yt.title)
+                mp4_streams = self.yt.streams.filter(file_extension="mp4", mime_type="video/mp4").order_by("resolution")
+                resolutions = {stream.resolution for stream in mp4_streams}
+                self.quality_options.configure(values=resolutions)
+                self.download_progress_bar.set(0.625)
+                self.update_idletasks()
+                subtitle_languages = self.yt.caption_tracks
+                languages = {lang.name for lang in subtitle_languages}
+                self.language_options.configure(values=languages)
                 self.download_progress_bar.set(0.75)
                 self.update_idletasks()
             else:
@@ -146,6 +156,32 @@ class YouTubeDownloader(ctk.CTk):
         except pytube.exceptions.RegexMatchError:
             self.file_not_found_error_label.grid(row=2, column=0, sticky=tk.W)
             self.download_progress_bar.grid_forget()
+
+    def download(self, link: str):
+        if not "plalist" in link:
+            datatype = self.data_type_options.get()
+
+            if datatype == "Video":
+                pass
+
+            elif datatype == "Audio":
+                audio_streams = self.yt.streams.filter(only_audio=True)
+                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.set(0)
+                self.update_idletasks()
+                audio_stream = audio_streams.order_by("abr").last()
+                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                self.download_progress_bar.set(0.5)
+                self.update_idletasks()
+                try:
+                    audio_stream.download(output_path=file_path, filename=f"{self.yt.title}__AUDIO.mp3")
+                except OSError:
+                    audio_stream.download(output_path=file_path, filename="Tkinter_YouTubeDownloader_file__AUDIO.mp3")
+                self.download_progress_bar.set(1)
+                self.update_idletasks()
+                self.download_progress_bar.grid_forget()
+            else:
+                pass
 
     def checkbox_clicked(self):
         if bool(self.select_all_videos_checkbox.get()):
