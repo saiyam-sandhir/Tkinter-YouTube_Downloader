@@ -31,17 +31,22 @@ class YouTubeDownloader(ctk.CTk):
 
         self.file_not_found_error_label = ctk.CTkLabel(self, text="Error: 404, YouTube video/playlist not found", text_color="red")
 
+        self.bind("<Return>", lambda x: [self.load_youtube(url_entry.get())])
+
         #----------Thumbnail----------#
-        thumbnail_viewer = ctk.CTkTabview(self, width=400, height=225, corner_radius=10)
+        thumbnail_viewer = ctk.CTkTabview(self, width=400, height=295, corner_radius=10)
         thumbnail_viewer.grid(row=3, column=1)
         thumbnail_viewer.grid_rowconfigure(0, weight=1)
         thumbnail_viewer.grid_columnconfigure(0, weight=1)
 
         thumbnail_viewer.add("Thumbnail")
 
-        thumbnail_image = ctk.CTkImage(light_image=Image.open(".\\images\\thumbnail.png"), dark_image=Image.open(".\\images\\thumbnail.png"), size=(100, 100))
-        self.thumbnail_img = ctk.CTkButton(thumbnail_viewer.tab("Thumbnail"), text="", image=thumbnail_image, bg_color="#2B2B2B", fg_color="#2B2B2B", hover=False)
+        self.thumbnail_image = ctk.CTkImage(light_image=Image.open(".\\images\\thumbnail.png"), dark_image=Image.open(".\\images\\thumbnail.png"), size=(100, 100))
+        self.thumbnail_img = ctk.CTkButton(thumbnail_viewer.tab("Thumbnail"), text="", image=self.thumbnail_image, bg_color="#2B2B2B", fg_color="#2B2B2B", hover=False, width=320, height=180)
         self.thumbnail_img.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+        self.title_label = ctk.CTkLabel(thumbnail_viewer.tab("Thumbnail"), text="", font=("Arial", 15), bg_color="#2B2B2B", fg_color="#2B2B2B")
+        self.title_label.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
 
         #----------Loaded Video(s)----------#
         loaded_videos_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
@@ -49,11 +54,11 @@ class YouTubeDownloader(ctk.CTk):
 
         ctk.CTkLabel(loaded_videos_frame, text="Video(s):", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
         
-        select_all_videos_checkbox = ctk.CTkCheckBox(loaded_videos_frame, text="Select all", font=("Palatino", 20),onvalue="on", offvalue="off")
-        select_all_videos_checkbox.grid(row=0, column=1, sticky=tk.E)
+        self.select_all_videos_checkbox = ctk.CTkCheckBox(loaded_videos_frame, text="Select all", font=("Palatino", 20), state=tk.DISABLED, command=self.checkbox_clicked)
+        self.select_all_videos_checkbox.grid(row=0, column=1, sticky=tk.E)
         
-        videos_listbox = tk.Listbox(loaded_videos_frame, width = 50, relief=tk.FLAT, bg="#2B2B2B", highlightthickness=0)
-        videos_listbox.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 20))
+        self.videos_listbox = tk.Listbox(loaded_videos_frame, selectmode=tk.MULTIPLE, fg="white", width = 50, relief=tk.FLAT, bg="#2B2B2B", highlightthickness=0)
+        self.videos_listbox.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 20))
 
         #for video option
         self.video_option_label = ctk.CTkLabel(loaded_videos_frame, text="Quality:", font=("Palatino", 20))
@@ -77,25 +82,76 @@ class YouTubeDownloader(ctk.CTk):
         download_button.grid(row=5, column=1, sticky=tk.NS)
 
         #----------Progress Bar----------#
-        download_progress_bar = ctk.CTkProgressBar(self, corner_radius=10)
-        #download_progress_bar.grid(row=6, column=0, sticky=tk.NSEW, padx=(0, 20))
-        #download_progress_bar.grid_forget()
+        self.download_progress_bar = ctk.CTkProgressBar(self, corner_radius=10, orientation=tk.HORIZONTAL)
 
         self.mainloop()
 
     def load_youtube(self, link: str):
         try:
-            self.yt = pytube.YouTube(link)
+            if not "playlist" in link:
+                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.set(0)
+                self.update_idletasks()
+                self.yt = pytube.YouTube(link)
+                self.thumbnail_img.configure(image=self.thumbnail_image)
+                self.title_label.configure(text="")
+                self.download_progress_bar.set(0.25)
+                self.update_idletasks()
+                self.videos_listbox.delete(0, tk.END)
+                self.download_progress_bar.set(0.5)
+                self.update_idletasks()
+                self.videos_listbox.insert(0, self.yt.title)
+                self.download_progress_bar.set(0.75)
+                self.update_idletasks()
+            else:
+                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.set(0)
+                self.update_idletasks()
+                self.yt = pytube.Playlist(link)
+                self.thumbnail_img.configure(image=self.thumbnail_image)
+                self.title_label.configure(text="")
+                self.download_progress_bar.set(0.25)
+                self.update_idletasks()
+                self.videos_listbox.delete(0, tk.END)
+                self.download_progress_bar.set(0.5)
+                self.update_idletasks()
+                num_of_videos = len(self.yt.videos)
+                for i, video in enumerate(self.yt.videos):
+                    self.download_progress_bar.set((0.5+(0.25*((i+1)/num_of_videos))))
+                    self.update_idletasks()
+                    self.videos_listbox.insert(i, video.title)
             self.file_not_found_error_label.grid_forget()
 
-            response = requests.get(self.yt.thumbnail_url)
+            if type(self.yt) == pytube.YouTube:
+                thumbnail_url = self.yt.thumbnail_url
+            else:
+                thumbnail_url = self.yt.videos[0].thumbnail_url
+
+            response = requests.get(thumbnail_url)
             thumbnail_data = response.content
             thumbnail_img = ctk.CTkImage(light_image=Image.open(BytesIO(thumbnail_data)), dark_image=Image.open(BytesIO(thumbnail_data)), size=(320, 180))
             self.thumbnail_img.configure(image=thumbnail_img)
 
+            if len(self.yt.title) > 40:
+                self.title_label.configure(text=f"Title: {self.yt.title[0:40]}....")
+            else:
+                self.title_label.configure(text=f"Title: {self.yt.title}")
+
+            self.download_progress_bar.set(1)
+            self.update_idletasks()
+            self.after(200, self.download_progress_bar.grid_forget)
+
+            self.select_all_videos_checkbox.configure(state=tk.NORMAL)
 
         except pytube.exceptions.RegexMatchError:
             self.file_not_found_error_label.grid(row=2, column=0, sticky=tk.W)
+            self.download_progress_bar.grid_forget()
+
+    def checkbox_clicked(self):
+        if bool(self.select_all_videos_checkbox.get()):
+            self.videos_listbox.selection_set(0, tk.END)
+        else:
+            self.videos_listbox.selection_clear(0, tk.END)
 
     def change_datatype(self, datatype: str):
         if datatype == "Video":
