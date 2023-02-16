@@ -96,6 +96,8 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.set(0.25)
                 self.update_idletasks()
                 self.videos_listbox.delete(0, tk.END)
+                resolutions = "None"
+                self.quality_options.configure(values=[resolutions])
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
                 self.videos_listbox.insert(0, self.yt.title)
@@ -116,13 +118,22 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.set(0.25)
                 self.update_idletasks()
                 self.videos_listbox.delete(0, tk.END)
+                resolutions = "None"
+                self.quality_options.configure(values=[resolutions])
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
                 num_of_videos = len(self.yt.videos)
+                #merge below two loops
                 for i, video in enumerate(self.yt.videos):
+                    self.videos_listbox.insert(i, video.title)
                     self.download_progress_bar.set((0.5+(0.25*((i+1)/num_of_videos))))
                     self.update_idletasks()
-                    self.videos_listbox.insert(i, video.title)
+                video_streams = []
+                for video in self.yt.videos:
+                    video_streams.append({stream.resolution for stream in video.streams.filter(file_extension="mp4", mime_type="video/mp4")})
+                    self.update()
+                resolutions = set.intersection(*video_streams)
+                self.quality_options.configure(values=resolutions)
             self.file_not_found_error_label.grid_forget()
 
             if type(self.yt) == pytube.YouTube:
@@ -151,9 +162,8 @@ class YouTubeDownloader(ctk.CTk):
             self.download_progress_bar.grid_forget()
 
     def download(self, link: str):
-        if not "plalist" in link:
-            datatype = self.data_type_options.get()
-
+        datatype = self.data_type_options.get()
+        if not "playlist" in link:
             if datatype == "Video":
                 video_stream = self.yt.streams.filter(res=self.quality_options.get(), file_extension="mp4").first()
                 self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
@@ -163,7 +173,10 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
                 try:
-                    video_stream.download(output_path=file_path, filename=f"{self.yt.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
+                    if ":" not in self.yt.title:
+                        video_stream.download(output_path=file_path, filename=f"{self.yt.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
+                    else:
+                        video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
                 except OSError:
                     video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
                 self.download_progress_bar.set(1)
@@ -180,11 +193,65 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
                 try:
-                    audio_stream.download(output_path=file_path, filename=f"{self.yt.title}__AUDIO__{random.randint(0, 999999999)}.mp3")
+                    if ":" not in self.yt.title:
+                        audio_stream.download(output_path=file_path, filename=f"{self.yt.title}__AUDIO__{random.randint(0, 999999999)}.mp3")
+                    else:
+                        audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
                 except OSError:
                     audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
                 self.download_progress_bar.set(1)
                 self.update_idletasks()
+                self.download_progress_bar.grid_forget()
+
+        else:
+            if datatype == "Video":
+                resolution = self.quality_options.get()
+                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.set(0)
+                self.update_idletasks()
+                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                num_of_videos = len(self.videos_listbox.curselection())
+                #no need to create YouTube object in this loop every time use self.ut.videos instead
+                for i, url in enumerate(self.yt.video_urls):
+                    if i in self.videos_listbox.curselection():
+                        video = pytube.YouTube(url)
+                        video_stream = video.streams.filter(res=resolution, file_extension="mp4").first()
+                        try:
+                            if ":" not in video.title:
+                                video_stream.download(output_path=file_path, filename=f"{video.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
+                            else:
+                                video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
+
+                        except OSError:
+                            video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
+                    self.download_progress_bar.set((0+((i+1)/num_of_videos)))
+                    self.update_idletasks()
+                        
+                self.download_progress_bar.grid_forget()
+
+            else:
+                resolution = self.quality_options.get()
+                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.set(0)
+                self.update_idletasks()
+                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                num_of_videos = len(self.videos_listbox.curselection())
+                for i, url in enumerate(self.yt.video_urls):
+                    #no need to create YouTube object in this loop every time use self.ut.videos instead
+                    if i in self.videos_listbox.curselection():
+                        video = pytube.YouTube(url)
+                        audio_stream = video.streams.filter(only_audio=True).order_by("abr").last()
+                        try:
+                            if ":" not in video.title:
+                                audio_stream.download(output_path=file_path, filename=f"{video.title}__VIDEO__{random.randint(0, 999999999)}.mp3")
+                            else:
+                                audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
+
+                        except OSError:
+                            audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
+                    self.download_progress_bar.set((0+((i+1)/num_of_videos)))
+                    self.update_idletasks()
+
                 self.download_progress_bar.grid_forget()
 
     def checkbox_clicked(self):
