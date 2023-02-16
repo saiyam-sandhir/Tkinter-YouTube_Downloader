@@ -5,6 +5,7 @@ import pytube
 import requests
 from io import BytesIO
 import os
+import random
 
 class YouTubeDownloader(ctk.CTk):
     def __init__(self):
@@ -68,13 +69,8 @@ class YouTubeDownloader(ctk.CTk):
         self.quality_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
         self.quality_options.set("Choose Quality")
 
-        #for subtitle option
-        self.subtitle_option_label = ctk.CTkLabel(loaded_videos_frame, text="Language:", font=("Palatino", 20))
-        self.language_options = ctk.CTkOptionMenu(loaded_videos_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
-        self.language_options.set("Select Language")
-
         #----------Download----------#
-        self.data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio", "Subtitle"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
+        self.data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
         self.data_type_options.grid(row=4, column=1, sticky = tk.NS, pady=10)
         self.data_type_options.set("Video")
 
@@ -108,12 +104,9 @@ class YouTubeDownloader(ctk.CTk):
                 self.quality_options.configure(values=resolutions)
                 self.download_progress_bar.set(0.625)
                 self.update_idletasks()
-                subtitle_languages = self.yt.caption_tracks
-                languages = {lang.name for lang in subtitle_languages}
-                self.language_options.configure(values=languages)
-                self.download_progress_bar.set(0.75)
-                self.update_idletasks()
+
             else:
+                self.select_all_videos_checkbox.deselect()
                 self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
@@ -162,9 +155,22 @@ class YouTubeDownloader(ctk.CTk):
             datatype = self.data_type_options.get()
 
             if datatype == "Video":
-                pass
+                video_stream = self.yt.streams.filter(res=self.quality_options.get(), file_extension="mp4").first()
+                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.set(0)
+                self.update_idletasks()
+                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                self.download_progress_bar.set(0.5)
+                self.update_idletasks()
+                try:
+                    video_stream.download(output_path=file_path, filename=f"{self.yt.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
+                except OSError:
+                    video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
+                self.download_progress_bar.set(1)
+                self.update_idletasks()
+                self.download_progress_bar.grid_forget()
 
-            elif datatype == "Audio":
+            else:
                 audio_streams = self.yt.streams.filter(only_audio=True)
                 self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
                 self.download_progress_bar.set(0)
@@ -174,14 +180,12 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
                 try:
-                    audio_stream.download(output_path=file_path, filename=f"{self.yt.title}__AUDIO.mp3")
+                    audio_stream.download(output_path=file_path, filename=f"{self.yt.title}__AUDIO__{random.randint(0, 999999999)}.mp3")
                 except OSError:
-                    audio_stream.download(output_path=file_path, filename="Tkinter_YouTubeDownloader_file__AUDIO.mp3")
+                    audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
                 self.download_progress_bar.set(1)
                 self.update_idletasks()
                 self.download_progress_bar.grid_forget()
-            else:
-                pass
 
     def checkbox_clicked(self):
         if bool(self.select_all_videos_checkbox.get()):
@@ -193,18 +197,8 @@ class YouTubeDownloader(ctk.CTk):
         if datatype == "Video":
             self.video_option_label.grid(row=3, column=0, sticky=tk.W)
             self.quality_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
-            self.subtitle_option_label.grid_forget()
-            self.language_options.grid_forget()
-
-        elif datatype == "Audio":
-            self.video_option_label.grid_forget()
-            self.quality_options.grid_forget()
-            self.subtitle_option_label.grid_forget()
-            self.language_options.grid_forget()
 
         else:
-            self.subtitle_option_label.grid(row=3, column=0, sticky=tk.W)
-            self.language_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
             self.video_option_label.grid_forget()
             self.quality_options.grid_forget()
 
