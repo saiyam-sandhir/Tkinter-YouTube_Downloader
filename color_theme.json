@@ -1,6 +1,6 @@
 {
     "CTk": {
-      "fg_color": "gray10"
+      "fg_color": "gray14"
     },
     "CTkFrame": {
       "corner_radius": 10,
@@ -13,7 +13,7 @@
       "corner_radius": 10,
       "border_width": 1,
       "fg_color": "transparent",
-      "hover_color": "#14375e",
+      "hover_color": "gray50",
       "border_color": "#949A9F",
       "text_color": "#DCE4EE",
       "text_color_disabled": "gray60"
@@ -50,7 +50,7 @@
     },
     "CTkOptionMenu": {
       "corner_radius": 10,
-      "fg_color": "#1f538d",
+      "fg_color": "#343638",
       "button_color": "#565B5E",
       "button_hover_color": "#7A848D",
       "text_color": "#DCE4EE",
