@@ -15,31 +15,54 @@ class YouTubeDownloader(ctk.CTk):
         self.resizable(False, False)
         self.configure(padx=20, pady=20)
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(2, weight=1)
+        #----------TOP FRAME----------#
+        top_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
+        top_frame.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 15))
 
-        #----------Load Video/Playlist----------#
-        load_video_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
-        load_video_frame.grid(row=1, column=0, columnspan=2,sticky=tk.NSEW)
+        top_frame.columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(self, text="Video/Playlist URL:", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
+        ctk.CTkLabel(top_frame, text="Video/Playlist URL:", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
 
-        url_entry = ctk.CTkEntry(load_video_frame, corner_radius=10)
-        url_entry.pack(side = tk.LEFT, fill=tk.BOTH, expand=True)
+        url_entry = ctk.CTkEntry(top_frame, corner_radius=10)
+        url_entry.grid(row=1, column=0, sticky=tk.NSEW)
 
         load_button_img = ctk.CTkImage(light_image=Image.open(".\\images\\load.png"), dark_image=Image.open(".\\images\\load.png"), size=(40, 40))
-        load_button = ctk.CTkButton(load_video_frame, text="", image=load_button_img, anchor=tk.CENTER, width=40, corner_radius=10, bg_color = "#242424", fg_color="#242424", hover_color="#EAEAEA", command=lambda: [self.load_youtube(url_entry.get())])
-        load_button.pack(side=tk.RIGHT)
+        load_button = ctk.CTkButton(top_frame, text="", image=load_button_img, anchor=tk.CENTER, width=40, corner_radius=10, bg_color="#242424", fg_color="#242424", hover_color="#EAEAEA", command=lambda: [self.load_youtube(url_entry.get())])
+        load_button.grid(column=1, row=1, sticky=tk.NSEW)
 
         self.file_not_found_error_label = ctk.CTkLabel(self, text="Error: 404, YouTube video/playlist not found", text_color="red")
 
         self.bind("<Return>", lambda x: [self.load_youtube(url_entry.get())])
 
-        #----------Thumbnail----------#
-        thumbnail_viewer = ctk.CTkTabview(self, width=400, height=295, corner_radius=10)
-        thumbnail_viewer.grid(row=3, column=1)
-        thumbnail_viewer.grid_rowconfigure(0, weight=1)
-        thumbnail_viewer.grid_columnconfigure(0, weight=1)
+        #----------LEFT FRAME----------#
+        left_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
+        left_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=(0, 20), pady=(10, 0))
+
+        left_frame.rowconfigure(4, weight=1)
+
+        ctk.CTkLabel(left_frame, text="Video(s):", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
+        
+        self.select_all_videos_checkbox = ctk.CTkCheckBox(left_frame, text="Select all", font=("Palatino", 20), state=tk.DISABLED, command=self.checkbox_clicked)
+        self.select_all_videos_checkbox.grid(row=0, column=1, sticky=tk.E)
+        
+        self.videos_listbox = tk.Listbox(left_frame, selectmode=tk.MULTIPLE, fg="white", width=50, relief=tk.FLAT, bg="#2B2B2B", highlightthickness=0)
+        self.videos_listbox.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 20))
+
+        #for video option
+        self.video_option_label = ctk.CTkLabel(left_frame, text="Quality:", font=("Palatino", 20))
+        self.video_option_label.grid(row=2, column=0, sticky=tk.W)
+        self.quality_options = ctk.CTkOptionMenu(left_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
+        self.quality_options.grid(row=3, column=0, columnspan=2, sticky=tk.NSEW)
+        self.quality_options.set("Choose Quality")
+
+        self.download_progress_bar = ctk.CTkProgressBar(left_frame, progress_color="green", corner_radius=10, orientation=tk.HORIZONTAL)
+
+        #----------RIGHT FRAME----------#
+        right_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
+        right_frame.grid(row=1, column=1, sticky=tk.NSEW)
+
+        thumbnail_viewer = ctk.CTkTabview(right_frame, width=400, height=295, corner_radius=10)
+        thumbnail_viewer.grid(row=0, column=0)
 
         thumbnail_viewer.add("Thumbnail")
 
@@ -50,36 +73,13 @@ class YouTubeDownloader(ctk.CTk):
         self.title_label = ctk.CTkLabel(thumbnail_viewer.tab("Thumbnail"), text="", font=("Arial", 15), bg_color="#2B2B2B", fg_color="#2B2B2B")
         self.title_label.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
 
-        #----------Loaded Video(s)----------#
-        loaded_videos_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
-        loaded_videos_frame.grid(row=3, column=0, sticky=tk.NSEW, pady = (25,0), padx=(0, 20))
-
-        ctk.CTkLabel(loaded_videos_frame, text="Video(s):", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
-        
-        self.select_all_videos_checkbox = ctk.CTkCheckBox(loaded_videos_frame, text="Select all", font=("Palatino", 20), state=tk.DISABLED, command=self.checkbox_clicked)
-        self.select_all_videos_checkbox.grid(row=0, column=1, sticky=tk.E)
-        
-        self.videos_listbox = tk.Listbox(loaded_videos_frame, selectmode=tk.MULTIPLE, fg="white", width = 50, relief=tk.FLAT, bg="#2B2B2B", highlightthickness=0)
-        self.videos_listbox.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 20))
-
-        #for video option
-        self.video_option_label = ctk.CTkLabel(loaded_videos_frame, text="Quality:", font=("Palatino", 20))
-        self.video_option_label.grid(row=3, column=0, sticky=tk.W)
-        self.quality_options = ctk.CTkOptionMenu(loaded_videos_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
-        self.quality_options.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW)
-        self.quality_options.set("Choose Quality")
-
-        #----------Download----------#
-        self.data_type_options = ctk.CTkOptionMenu(self, values=["Video", "Audio"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
-        self.data_type_options.grid(row=4, column=1, sticky = tk.NS, pady=10)
+        self.data_type_options = ctk.CTkOptionMenu(right_frame, values=["Video", "Audio"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
+        self.data_type_options.grid(row=1, column=0, sticky=tk.NS, pady=10)
         self.data_type_options.set("Video")
 
         download_button_img = ctk.CTkImage(light_image=Image.open(".\\images\\download.png"), dark_image=Image.open(".\\images\\download.png"), size=(20, 20))
-        download_button = ctk.CTkButton(self, text="Download", image=download_button_img, fg_color="green", hover_color="#3C6255", anchor=tk.CENTER, corner_radius=10, command=lambda: [self.download(url_entry.get())])
-        download_button.grid(row=5, column=1, sticky=tk.NS)
-
-        #----------Progress Bar----------#
-        self.download_progress_bar = ctk.CTkProgressBar(self, corner_radius=10, orientation=tk.HORIZONTAL)
+        download_button = ctk.CTkButton(right_frame, text="Download", image=download_button_img, fg_color="#3C6255", hover_color="green", anchor=tk.CENTER, corner_radius=10, command=lambda: [self.download(url_entry.get())])
+        download_button.grid(row=2, column=0, sticky=tk.NS)
 
         self.mainloop()
 
@@ -87,7 +87,7 @@ class YouTubeDownloader(ctk.CTk):
         try:
             if not "playlist" in link:
                 self.select_all_videos_checkbox.deselect()
-                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
                 self.yt = pytube.YouTube(link)
@@ -109,7 +109,7 @@ class YouTubeDownloader(ctk.CTk):
 
             else:
                 self.select_all_videos_checkbox.deselect()
-                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
                 self.yt = pytube.Playlist(link)
@@ -153,20 +153,20 @@ class YouTubeDownloader(ctk.CTk):
 
             self.download_progress_bar.set(1)
             self.update_idletasks()
-            self.after(200, self.download_progress_bar.grid_forget)
+            self.after(200, self.download_progress_bar.place_forget)
 
             self.select_all_videos_checkbox.configure(state=tk.NORMAL)
 
         except pytube.exceptions.RegexMatchError:
             self.file_not_found_error_label.grid(row=2, column=0, sticky=tk.W)
-            self.download_progress_bar.grid_forget()
+            self.download_progress_bar.place_forget()
 
     def download(self, link: str):
         datatype = self.data_type_options.get()
         if not "playlist" in link:
             if datatype == "Video":
                 video_stream = self.yt.streams.filter(res=self.quality_options.get(), file_extension="mp4").first()
-                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
                 file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
@@ -181,11 +181,11 @@ class YouTubeDownloader(ctk.CTk):
                     video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
                 self.download_progress_bar.set(1)
                 self.update_idletasks()
-                self.download_progress_bar.grid_forget()
+                self.download_progress_bar.place_forget()
 
             else:
                 audio_streams = self.yt.streams.filter(only_audio=True)
-                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
                 audio_stream = audio_streams.order_by("abr").last()
@@ -201,12 +201,12 @@ class YouTubeDownloader(ctk.CTk):
                     audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
                 self.download_progress_bar.set(1)
                 self.update_idletasks()
-                self.download_progress_bar.grid_forget()
+                self.download_progress_bar.place_forget()
 
         else:
             if datatype == "Video":
                 resolution = self.quality_options.get()
-                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
                 file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
@@ -227,11 +227,11 @@ class YouTubeDownloader(ctk.CTk):
                     self.download_progress_bar.set((0+((i+1)/num_of_videos)))
                     self.update_idletasks()
                         
-                self.download_progress_bar.grid_forget()
+                self.download_progress_bar.place_forget()
 
             else:
                 resolution = self.quality_options.get()
-                self.download_progress_bar.grid(row=5, column=0, sticky=tk.NSEW, padx=(0, 20))
+                self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
                 file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
@@ -252,7 +252,7 @@ class YouTubeDownloader(ctk.CTk):
                     self.download_progress_bar.set((0+((i+1)/num_of_videos)))
                     self.update_idletasks()
 
-                self.download_progress_bar.grid_forget()
+                self.download_progress_bar.place_forget()
 
     def checkbox_clicked(self):
         if bool(self.select_all_videos_checkbox.get()):
