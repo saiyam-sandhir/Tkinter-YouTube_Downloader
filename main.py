@@ -50,7 +50,6 @@ class YouTubeDownloader(ctk.CTk):
         self.videos_listbox = tk.Listbox(left_frame, selectmode=tk.MULTIPLE, fg="white", width=50, relief=tk.FLAT, bg="#2B2B2B", highlightthickness=0)
         self.videos_listbox.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 20))
 
-        #for video option
         self.video_option_label = ctk.CTkLabel(left_frame, text="Quality:", font=("Palatino", 20))
         self.video_option_label.grid(row=2, column=0, sticky=tk.W)
         self.quality_options = ctk.CTkOptionMenu(left_frame, values=["None"], corner_radius=10)
