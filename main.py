@@ -26,11 +26,14 @@ class TitleSelector():
             self.listbox.selection_clear(0, tk.END)
 
     def update_listbox(self, titles: list):
+        #clear out all the video tiles in the listbox(if any)
         self.listbox.delete(0, tk.END)
+        #insert the new video title(s) in the listbox
         for i, title in enumerate(titles):
             self.listbox.insert(i, title)
 
     def get_selected_items(self):
+        #return the indices of the selected video title(s) in the listbox
         return self.listbox.curselection()
 
 class YouTubeDownloader(ctk.CTk):
@@ -51,7 +54,7 @@ class YouTubeDownloader(ctk.CTk):
 
         ctk.CTkLabel(top_frame, text="Video/Playlist URL:", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
 
-        url_entry = ctk.CTkEntry(top_frame, corner_radius=10)
+        url_entry = ctk.CTkEntry(top_frame, corner_radius=10, takefocus=False)
         url_entry.grid(row=1, column=0, sticky=tk.NSEW)
 
         load_button_img = ctk.CTkImage(light_image=Image.open(".\\images\\load.png"), dark_image=Image.open(".\\images\\load.png"), size=(40, 40))
@@ -115,8 +118,6 @@ class YouTubeDownloader(ctk.CTk):
     def load_youtube(self, link: str):
         try:
             if not "playlist" in link:
-                #self.select_all_videos_checkbox.deselect()
-                self.title_selector.checkbox_clicked()
                 self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
@@ -132,6 +133,8 @@ class YouTubeDownloader(ctk.CTk):
                 self.update_idletasks()
                 #self.videos_listbox.insert(0, self.yt.title)
                 self.title_selector.update_listbox([self.yt.title])
+                self.title_selector.checkbox.select()
+                self.title_selector.checkbox_clicked()
                 mp4_streams = self.yt.streams.filter(file_extension="mp4", mime_type="video/mp4").order_by("resolution")
                 resolutions = {stream.resolution for stream in mp4_streams}
                 self.quality_options.configure(values=resolutions)
@@ -139,7 +142,9 @@ class YouTubeDownloader(ctk.CTk):
                 self.update_idletasks()
 
             else:
-                self.select_all_videos_checkbox.deselect()
+                #self.select_all_videos_checkbox.deselect()
+                self.title_selector.checkbox.deselect()
+                self.title_selector.checkbox_clicked()
                 self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
@@ -202,16 +207,19 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
-                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
-                try:
-                    if ":" not in self.yt.title:
-                        video_stream.download(output_path=file_path, filename=f"{self.yt.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
-                    else:
+                if self.title_selector.get_selected_items() != ():
+                    file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                    try:
+                        if ":" not in self.yt.title:
+                            video_stream.download(output_path=file_path, filename=f"{self.yt.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
+                        else:
+                            video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
+                    except OSError:
                         video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
-                except OSError:
-                    video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
+                else:
+                    tk.messagebox.showwarning("WARNING", "No video selected")
                 self.download_progress_bar.set(1)
                 self.update_idletasks()
                 self.download_progress_bar.place_forget()
@@ -222,16 +230,19 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
                 audio_stream = audio_streams.order_by("abr").last()
-                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
                 self.download_progress_bar.set(0.5)
                 self.update_idletasks()
-                try:
-                    if ":" not in self.yt.title:
-                        audio_stream.download(output_path=file_path, filename=f"{self.yt.title}__AUDIO__{random.randint(0, 999999999)}.mp3")
-                    else:
+                if self.title_selector.get_selected_items() != ():
+                    file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                    try:
+                        if ":" not in self.yt.title:
+                            audio_stream.download(output_path=file_path, filename=f"{self.yt.title}__AUDIO__{random.randint(0, 999999999)}.mp3")
+                        else:
+                            audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
+                    except OSError:
                         audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
-                except OSError:
-                    audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
+                else:
+                    tk.messagebox.showwarning("WARNING", "No video selected")
                 self.download_progress_bar.set(1)
                 self.update_idletasks()
                 self.download_progress_bar.place_forget()
@@ -242,25 +253,27 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
-                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
-                num_of_videos = len(self.videos_listbox.curselection())
                 #no need to create YouTube object in this loop every time use self.ut.videos instead
                 #for i, url in enumerate(self.yt.video_urls):
                     #if i in self.videos_listbox.curselection():
                         #video = pytube.YouTube(url)
                         #video_stream = video.streams.filter(res=resolution, file_extension="mp4").first()
-                for video in [self.yt.videos[index_num] for index_num in self.title_selector.get_selected_items()]:
-                    video_stream = video.streams.filter(res=resolution, file_extention="mp4").first()
-                    try:
-                        if ":" not in video.title:
-                            video_stream.download(output_path=file_path, filename=f"{video.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
-                        else:
-                            video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
+                if self.title_selector.get_selected_items() != ():
+                    file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                    for video in [self.yt.videos[index_num] for index_num in self.title_selector.get_selected_items()]:
+                        video_stream = video.streams.filter(res=resolution, file_extention="mp4").first()
+                        try:
+                            if ":" not in video.title:
+                                video_stream.download(output_path=file_path, filename=f"{video.title}__VIDEO__{random.randint(0, 999999999)}.mp4")
+                            else:
+                                video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
 
-                    except OSError:
-                        video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
-                    self.download_progress_bar.set((0+((i+1)/num_of_videos)))
-                    self.update_idletasks()
+                        except OSError:
+                            video_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__VIDEO__{random.randint(0, 999999999)}.mp4")
+                        self.download_progress_bar.set((0+((i+1)/num_of_videos)))
+                        self.update_idletasks()
+                else:
+                    tk.messagebox.showwarning("WARNING", "No video selected")
                         
                 self.download_progress_bar.place_forget()
 
@@ -269,25 +282,27 @@ class YouTubeDownloader(ctk.CTk):
                 self.download_progress_bar.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
                 self.download_progress_bar.set(0)
                 self.update_idletasks()
-                file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
-                num_of_videos = len(self.videos_listbox.curselection())
                 #for i, url in enumerate(self.yt.video_urls):
                     #no need to create YouTube object in this loop every time use self.ut.videos instead
                     #if i in self.videos_listbox.curselection():
                         #video = pytube.YouTube(url)
                         #audio_stream = video.streams.filter(only_audio=True).order_by("abr").last()
-                for video in [self.yt.videos[index_num] for index_num in self.title_selector.get_selected_items()]:
-                    audio_stream = video.streams.fileter(only_audio=True).order_by("abr").last()
-                    try:
-                        if ":" not in video.title:
-                            audio_stream.download(output_path=file_path, filename=f"{video.title}__VIDEO__{random.randint(0, 999999999)}.mp3")
-                        else:
-                            audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
+                if self.title_selector.get_selected_items() != ():
+                    file_path = tk.filedialog.askdirectory(initialdir=os.path.expanduser("~/Downloads"), mustexist=True)
+                    for video in [self.yt.videos[index_num] for index_num in self.title_selector.get_selected_items()]:
+                        audio_stream = video.streams.filter(only_audio=True).order_by("abr").last()
+                        try:
+                            if ":" not in video.title:
+                                audio_stream.download(output_path=file_path, filename=f"{video.title}__VIDEO__{random.randint(0, 999999999)}.mp3")
+                            else:
+                                audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
 
-                    except OSError:
-                        audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
-                    self.download_progress_bar.set((0+((i+1)/num_of_videos)))
-                    self.update_idletasks()
+                        except OSError:
+                            audio_stream.download(output_path=file_path, filename=f"Tkinter_YouTubeDownloader_file__AUDIO__{random.randint(0, 999999999)}.mp3")
+                        self.download_progress_bar.set((0+((i+1)/num_of_videos)))
+                        self.update_idletasks()
+                else:
+                    tk.messagebox.showwarning("WARNING", "No video selected")
 
                 self.download_progress_bar.place_forget()
 
