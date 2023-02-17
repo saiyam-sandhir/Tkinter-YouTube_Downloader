@@ -15,6 +15,8 @@ class YouTubeDownloader(ctk.CTk):
         self.resizable(False, False)
         self.configure(padx=20, pady=20)
 
+        ctk.set_default_color_theme("color_theme.json")
+
         #----------TOP FRAME----------#
         top_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
         top_frame.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 15))
@@ -51,7 +53,7 @@ class YouTubeDownloader(ctk.CTk):
         #for video option
         self.video_option_label = ctk.CTkLabel(left_frame, text="Quality:", font=("Palatino", 20))
         self.video_option_label.grid(row=2, column=0, sticky=tk.W)
-        self.quality_options = ctk.CTkOptionMenu(left_frame, values=["None"], fg_color="#343638", hover=False, corner_radius=10)
+        self.quality_options = ctk.CTkOptionMenu(left_frame, values=["None"], fg_color="#343638", corner_radius=10)
         self.quality_options.grid(row=3, column=0, columnspan=2, sticky=tk.NSEW)
         self.quality_options.set("Choose Quality")
 
@@ -67,13 +69,13 @@ class YouTubeDownloader(ctk.CTk):
         thumbnail_viewer.add("Thumbnail")
 
         self.thumbnail_image = ctk.CTkImage(light_image=Image.open(".\\images\\thumbnail.png"), dark_image=Image.open(".\\images\\thumbnail.png"), size=(100, 100))
-        self.thumbnail_img = ctk.CTkButton(thumbnail_viewer.tab("Thumbnail"), text="", image=self.thumbnail_image, bg_color="#2B2B2B", fg_color="#2B2B2B", hover=False, width=320, height=180)
+        self.thumbnail_img = ctk.CTkButton(thumbnail_viewer.tab("Thumbnail"), text="", image=self.thumbnail_image, hover=False, width=320, height=180, border_width=0,)
         self.thumbnail_img.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        self.title_label = ctk.CTkLabel(thumbnail_viewer.tab("Thumbnail"), text="", font=("Arial", 15), bg_color="#2B2B2B", fg_color="#2B2B2B")
+        self.title_label = ctk.CTkLabel(thumbnail_viewer.tab("Thumbnail"), text="", font=("Arial", 15))
         self.title_label.place(relx=0.5, rely=0.05, anchor=tk.CENTER)
 
-        self.data_type_options = ctk.CTkOptionMenu(right_frame, values=["Video", "Audio"], fg_color="#343638", hover=False, corner_radius=10, command=self.change_datatype)
+        self.data_type_options = ctk.CTkOptionMenu(right_frame, values=["Video", "Audio"], fg_color="#343638", corner_radius=10, command=self.change_datatype)
         self.data_type_options.grid(row=1, column=0, sticky=tk.NS, pady=10)
         self.data_type_options.set("Video")
 
