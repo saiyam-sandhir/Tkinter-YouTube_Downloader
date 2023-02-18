@@ -7,6 +7,91 @@ from io import BytesIO
 import os
 import random
 
+# class TopFrame(ctk.CTkFrame):
+#     def __init__(self, master):
+#         super().__init__(master)
+
+#         #giving weightage to the first column so that it exapands when given space
+#         self.columnconfigure(0, weight=1)
+
+#         ctk.CTkLabel(self, text="Video/Playlist URL:", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
+
+#         self.entry_box = ctk.CTkEntry(self, takefocus = True)
+#         self.entry_box.grid(row=1, column=0, sticky=tk.NSEW)
+
+#         load_button_img = ctk.CTkImage(light_image=Image.open(".\\images\\load.png"), dark_image=Image.open(".\\images\\load.png"), size=(40, 40))
+#         load_button = ctk.CTkButton(self, text="", image=load_button_img, anchor=tk.CENTER, width=40)
+#         load_button.grid(column=1, row=1, sticky=tk.NSEW)
+
+#         self.load_error_label = ctk.CTkLabel(self, text="", text_color="red")
+
+#         self.bind("<Return>", self.read_entry_box)
+
+#         self.yt = None
+
+#     def load_video(self, left_frame=self.cget("master").left_frame, right_frame=self.cget("master").right_frame):
+#         self.yt = pytube.YouTube(url)
+#         left_frame.load_video(self.yt)
+#         right_frame.load_video(self.yt)
+    
+#     def load_playlist(self, left_frame=self.cget("master").left_frame, right_frame=self.cget("master").right_frame):
+#         self.yt = pytube.YouTube(url)
+#         left_frame.load_playlist(self.yt)
+#         right_frame.load_playlist(self.yt)
+
+#     def show_load_err_msg(self, err_msg: str):
+#         self.configure(text=err_msg)
+#         self.load_error_label.grid(row=2, column=0, sticky=tk.W)
+
+#     def hide_load_err_msg(self):
+#         self.load_error_label.grid_forget()
+
+#     def read_entry_box(self):
+#         url = self.entry_box.get()
+#         try:
+#             request = requests.get()
+#             response = request.status_code
+
+#             if response == 200 :
+#                 if not "playlist" in url:
+#                     self.load_video()
+#                 else:
+#                     self.load_playlist()
+
+#             elif response == 404:
+#                 self.show_load_err_msg("Video/Playlist not found")
+
+#             else:
+#                 tk.messagebox.showerror("ERROR", "Some error occured, please try again.")
+
+#         except requests.RequestException:
+#             self.show_load_err_msg("There was an ambiguous exception that occurred while handling your request.")
+        
+#         except requests.ConnectionError:
+#             self.show_load_err_msg("A Connection error occurred.")
+        
+#         except requests.HTTPError:
+#             self.show_load_err_msg("An HTTP error occurred.")
+        
+#         except requests.URLRequired:
+#             self.show_load_err_msg("A valid URL is required to make a request.")
+        
+#         except requests.TooManyRedirects:
+#             self.show_load_err_msg("Too many redirects.")
+        
+#         except requests.ConnectTimeout:
+#             self.show_load_err_msg("The request timed out while trying to connect to the remote server.")
+        
+#         except requests.ReadTimeout:
+#             self.show_load_err_msg("The server did not send any data in the allotted amount of time.")
+
+#         except pytube.exceptions.RegexMatchError:
+#             self.show_load_err_msg("The link is probably not for any YouTube video/playlist")
+
+# class LeftFrame(ctk.CTkFrame):
+#     def __init__(self, master):
+#         super().__init__(master)
+
 class TitleSelector():
     def __init__(self, parent_frame):
         ctk.CTkLabel(parent_frame, text="Video(s):", font=("Palatino", 20)).grid(row=0, column=0, sticky=tk.W)
@@ -47,7 +132,7 @@ class YouTubeDownloader(ctk.CTk):
         ctk.set_default_color_theme("color_theme.json")
 
         #----------TOP FRAME----------#
-        top_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
+        top_frame = ctk.CTkFrame(self)
         top_frame.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, pady=(0, 15))
 
         top_frame.columnconfigure(0, weight=1)
@@ -66,7 +151,7 @@ class YouTubeDownloader(ctk.CTk):
         self.bind("<Return>", lambda x: [self.load_youtube(url_entry.get())])
 
         #----------LEFT FRAME----------#
-        left_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
+        left_frame = ctk.CTkFrame(self)
         left_frame.grid(row=1, column=0, sticky=tk.NSEW, padx=(0, 20), pady=(10, 0))
 
         left_frame.rowconfigure(4, weight=1)
@@ -90,7 +175,7 @@ class YouTubeDownloader(ctk.CTk):
         self.download_progress_bar = ctk.CTkProgressBar(left_frame, orientation=tk.HORIZONTAL)
 
         #----------RIGHT FRAME----------#
-        right_frame = ctk.CTkFrame(self, bg_color="#242424", fg_color="#242424")
+        right_frame = ctk.CTkFrame(self)
         right_frame.grid(row=1, column=1, sticky=tk.NSEW)
 
         thumbnail_viewer = ctk.CTkTabview(right_frame, width=400, height=295)
